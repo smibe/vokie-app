@@ -1,0 +1,36 @@
+{
+    "name": "TestLektion",
+    "source": "Deutsch",
+    "destination": "English",
+    "words":
+    [
+        {
+            "src": "Tisch",
+            "dest": "table"       
+        },
+        {
+            "src": "Löffel",
+            "dest": "spoon"       
+        },
+        {
+            "src": "Stuhl",
+            "dest": "chair"       
+        },
+        {
+            "src": "Ball",
+            "dest": "ball"       
+        },
+        {
+            "src": "Fernseher",
+            "dest": "television"       
+        },
+        {
+            "src": "Baum",
+            "dest": "tree"       
+        },
+        {
+            "src": "Fahrrad",
+            "dst": "bycicle"
+        }
+    ]
+}

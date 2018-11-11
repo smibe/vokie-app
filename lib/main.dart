@@ -1,4 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:vokie/json_object.dart';
+import 'package:vokie/lesson_service.dart';
+import 'package:vokie/vokable.dart';
 
 void main() => runApp(new MyApp());
 
@@ -24,21 +32,15 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => new _MyHomePageState();
 }
 
-class Vokabel {
-  String source;
-  String target;
-  int correct = 0;
-  int wrong = 0;
-  bool showTarget = false;
-
-  Vokabel(this.source, this.target);
-}
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Vokabel> lesson = [
     Vokabel("Tisch", "table"),
     Vokabel("Fahrrad", "bicycle"),
   ];
+
+  LessonService service;
+  JsonObject lessons;
 
   int selected = 0;
 
@@ -71,6 +73,17 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var idx in setVisible)
       lesson[idx].showTarget = false;
   }
+
+  @override void initState() {
+      // TODO: implement initState
+      super.initState();
+
+      this.service = new LessonService();
+      service.getLesson().then((l) {
+        var firstLesson = l.getWords();
+        setState(() => this.lesson = firstLesson);
+      });
+    }
 
   @override
   Widget build(BuildContext context) {
