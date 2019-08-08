@@ -1,5 +1,5 @@
 {
-    "name": "TestLektion",
+    "name": "ErsteLektion",
     "source": "Deutsch",
     "destination": "English",
     "words":
@@ -30,7 +30,7 @@
         },
         {
             "src": "Fahrrad",
-            "dst": "bicycle"
+            "dst": "bycicle"
         }
     ]
 }

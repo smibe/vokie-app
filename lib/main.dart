@@ -2,21 +2,25 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vokie/DiContainer.dart';
+import 'package:vokie/LessonView.dart';
 import 'package:vokie/jsonApi.dart';
 import 'package:vokie/jsonHttp_api.dart';
 
 import 'package:vokie/json_object.dart';
+import 'package:vokie/lesson.dart';
 import 'package:vokie/lesson_service.dart';
 import 'package:vokie/vokable.dart';
 
-void main() {
-  initialize();
+void main() async {
+  await initialize();
   runApp(new MyApp());
 }
 
-void initialize() {
+Future initialize() async {
   DiContainer.setInstance<JsonApi>(new JsonHttpApi());
+  DiContainer.setInstance<SharedPreferences>(await SharedPreferences.getInstance());
 }
 
 class MyApp extends StatelessWidget {
@@ -42,21 +46,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Vokabel> lesson = [
-    Vokabel("Tisch", "table"),
-    Vokabel("Fahrrad", "bicycle"),
-  ];
+  var  lessonsJson = """
+  {
+    "name": "dummy",
+    "source": "Deutsch",
+    "destination": "English",
+    "words":[
+    ]
+  }""";
+
+  _MyHomePageState() {
+    var jsonLessons = JsonObject.fromDynamic(json.decode(lessonsJson));
+    this.lessonController = Lesson(jsonLessons);
+  }
+
+  Lesson lessonController;
 
   LessonService service;
-  JsonObject lessons;
+  List<Vokabel> lesson;
 
   int selected = 0;
-
-  void addVokabel(Vokabel vokabel) {
-    setState(() {
-      lesson.add(vokabel);
-    });
-  }
 
   Widget empty = Container(width: 0.0, height: 0.0);
 
@@ -81,12 +90,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     this.service = new LessonService();
     service.getLesson().then((l) {
-      var firstLesson = l.getWords();
+      var firstLesson = l.data.lesson;
+      this.lessonController = l;
+      this.lessonController.hasChanged.add((s) => setState((){}));
       setState(() => this.lesson = firstLesson);
     });
   }
@@ -94,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     TextTheme tStyle = Theme.of(context).textTheme;
-    return new Scaffold(
+    var scaffold = new Scaffold(
         appBar: new AppBar(title: new Text(widget.title), actions: <Widget>[
           IconButton(
             icon: Icon(Icons.list),
@@ -116,15 +126,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () => setState(() => resetVisible())),
           ),
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.settings),
             onPressed: () {},
           ),
         ]),
-        body: new ListView.builder(
-          padding: EdgeInsets.all(10.0),
-          itemCount: lesson.length,
-          itemBuilder: createItem,
-        ));
+        body: new LessonView(this.lessonController));
+    return scaffold;
   }
 
   Widget createItem(context, idx) {
@@ -176,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         RaisedButton(
                             onPressed: () => setState(() {
                                   if (!vokabel.showTarget)
-                                    showTarget = true;
+                                    vokabel.showTarget = true;
                                   else {
                                     selected++;
                                     vokabel.correct++;
