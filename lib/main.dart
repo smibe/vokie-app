@@ -11,6 +11,7 @@ import 'package:vokie/jsonHttp_api.dart';
 import 'package:vokie/json_object.dart';
 import 'package:vokie/lesson.dart';
 import 'package:vokie/lesson_service.dart';
+import 'package:vokie/storage.dart';
 import 'package:vokie/vokable.dart';
 
 void main() async {
@@ -20,7 +21,9 @@ void main() async {
 
 Future initialize() async {
   DiContainer.setInstance<JsonApi>(new JsonHttpApi());
-  DiContainer.setInstance<SharedPreferences>(await SharedPreferences.getInstance());
+  var sharedPreferences = await SharedPreferences.getInstance();
+  DiContainer.setInstance<SharedPreferences>(sharedPreferences);
+  DiContainer.setInstance<Storage>(Storage());
 }
 
 class MyApp extends StatelessWidget {
@@ -46,7 +49,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var  lessonsJson = """
+  var lessonsJson = """
   {
     "name": "dummy",
     "source": "Deutsch",
@@ -62,12 +65,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Lesson lessonController;
 
+  Storage _storage;
+  bool _hasChanged = false;
+
   LessonService service;
   List<Vokabel> lesson;
 
   int selected = 0;
 
   Widget empty = Container(width: 0.0, height: 0.0);
+  Timer _timer;
 
   List setVisible = new List<int>();
   void allVisible() {
@@ -88,17 +95,36 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var idx in setVisible) lesson[idx].showTarget = false;
   }
 
+  void save() {
+    if (_hasChanged) {
+      service.storeCurrentLesson(_storage, lessonController);
+    }
+    _hasChanged = false;
+  }
+
   @override
   void initState() {
+    _storage = DiContainer.resolve<Storage>();
+
+    _timer = Timer.periodic(Duration(seconds: 5), (t) {
+      save();
+    });
     super.initState();
 
     this.service = new LessonService();
-    service.getLesson().then((l) {
+    service.getCurrentLesson(_storage).then((l) {
       var firstLesson = l.data.lesson;
       this.lessonController = l;
-      this.lessonController.hasChanged.add((s) => setState((){}));
+      this.lessonController.hasChanged.add((s) => setState(() {}));
       setState(() => this.lesson = firstLesson);
     });
+  }
+
+  @override
+  void dispose() {
+    save();
+    _timer.cancel();
+    super.dispose();
   }
 
   @override
@@ -108,11 +134,14 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: new AppBar(title: new Text(widget.title), actions: <Widget>[
           IconButton(
             icon: Icon(Icons.list),
-            onPressed: () {},
+            onPressed: () {
+            },
           ),
           IconButton(
             icon: Icon(Icons.check_box_outline_blank),
-            onPressed: () {},
+            onPressed: () {
+              DiContainer.resolve<Storage>().remove("current");
+            },
           ),
           IconButton(
             icon: Icon(Icons.refresh),
@@ -121,92 +150,14 @@ class _MyHomePageState extends State<MyHomePage> {
           GestureDetector(
             onTapDown: (d) => setState(() => allVisible()),
             onTap: () => setState(() => resetVisible()),
-            child: IconButton(
-                icon: Icon(Icons.visibility),
-                onPressed: () => setState(() => resetVisible())),
+            child: IconButton(icon: Icon(Icons.visibility), onPressed: () => setState(() => resetVisible())),
           ),
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {},
           ),
         ]),
-        body: new LessonView(this.lessonController));
+        body: new LessonView(this.lessonController, onChanged: () => _hasChanged = true));
     return scaffold;
-  }
-
-  Widget createItem(context, idx) {
-    var vokabel = lesson[idx];
-    var showTarget = vokabel.showTarget;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selected = idx;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.all(10.0),
-        decoration: new BoxDecoration(
-            color: idx == selected
-                ? Color.fromRGBO(220, 220, 220, 1.0)
-                : Colors.white),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(vokabel.target, style: TextStyle(fontSize: 28.0)),
-              Text(showTarget ? vokabel.source : "",
-                  style: TextStyle(fontSize: 18.0)),
-              showTarget
-                  ? Row(
-                      children: [
-                        Text(vokabel.correct.toString(),
-                            style: TextStyle(
-                                color: vokabel.correct == 0
-                                    ? Colors.black
-                                    : Colors.green)),
-                        Text(" / "),
-                        Text(vokabel.wrong.toString(),
-                            style: TextStyle(
-                                color: vokabel.wrong == 0
-                                    ? Colors.black
-                                    : Colors.red)),
-                      ],
-                    )
-                  : empty,
-            ]),
-            idx == selected
-                ? Container(
-                    alignment: Alignment.centerRight,
-                    child: Column(
-                      children: <Widget>[
-                        RaisedButton(
-                            onPressed: () => setState(() {
-                                  if (!vokabel.showTarget)
-                                    vokabel.showTarget = true;
-                                  else {
-                                    selected++;
-                                    vokabel.correct++;
-                                  }
-                                }),
-                            color: Colors.greenAccent,
-                            child: Text(
-                                vokabel.showTarget ? "Richtig" : "OK")),
-                        vokabel.showTarget
-                            ? RaisedButton(
-                                onPressed: () => setState(() {
-                                      vokabel.wrong++;
-                                      selected++;
-                                    }),
-                                color: Colors.orangeAccent,
-                                child: Text("Falsch"))
-                            : empty,
-                      ],
-                    ))
-                : empty,
-          ],
-        ),
-      ),
-    );
   }
 }

@@ -19,6 +19,8 @@ class Storage {
     return _valueChanged[key];
   }
 
+  void remove(String key) => _preferences.remove(key);
+
   void set<T>(String key, T value) => setString(key, DataConverter.encode(value));
   T get<T>(String key, T defaultValue) {
     if (!containsKey(key)) return defaultValue;

@@ -27,5 +27,11 @@ Abschnitt 2;;
     expect(lessons.length, 2);
     expect (lesson, isNotNull);
 
+    var words = lesson.data.lesson;
+    expect(words[0].source, "on");
+    expect(words[0].target, "man");
+    expect(words[1].source, "homme (m)");
+    expect(words[1].target, "Mensch; Mann");
+
   });
 }

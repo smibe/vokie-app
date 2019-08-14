@@ -11,7 +11,7 @@ class JsonHttpApi extends JsonApi {
     response.transform(utf8.decoder).listen((String data) {
       contents.write(data);
     }, onDone: () => completer.complete(contents.toString()),
-    onError: () => print("something went wrong"));
+    onError: (e) => print("something went wrong"));
     return completer.future;
   }
 

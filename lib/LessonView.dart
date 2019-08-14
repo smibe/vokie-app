@@ -6,9 +6,9 @@ import 'package:vokie/lesson.dart';
 class LessonView extends Widget {
   final LessonState state;
   final Lesson lesson;
+  final Function onChanged;
 
-  LessonView(this.lesson) : this.state = lesson.data {
-  }
+  LessonView(this.lesson, {@required this.onChanged}) : this.state = lesson.data;
 
   final Widget empty = Container(width: 0.0, height: 0.0);
 
@@ -32,41 +32,36 @@ class LessonView extends Widget {
       child: Container(
         padding: EdgeInsets.all(10.0),
         decoration: new BoxDecoration(
-            color: idx == this.lesson.data.selected
-                ? Color.fromRGBO(220, 220, 220, 1.0)
-                : Colors.white),
+            color: idx == this.lesson.data.selected ? Color.fromRGBO(220, 220, 220, 1.0) : Colors.white),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(vokabel.target, style: TextStyle(fontSize: 28.0)),
-              Text(showTarget ? vokabel.source : "",
-                  style: TextStyle(fontSize: 18.0)),
-              showTarget
-                  ? Row(
-                      children: [
-                        Text(vokabel.correct.toString(),
-                            style: TextStyle(
-                                color: vokabel.correct == 0
-                                    ? Colors.black
-                                    : Colors.green)),
-                        Text(" / "),
-                        Text(vokabel.wrong.toString(),
-                            style: TextStyle(
-                                color: vokabel.wrong == 0
-                                    ? Colors.black
-                                    : Colors.red)),
-                      ],
-                    )
-                  : empty,
-            ]),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(vokabel.target, style: TextStyle(fontSize: 28.0)),
+                Text(showTarget ? vokabel.source : "", style: TextStyle(fontSize: 18.0)),
+                showTarget
+                    ? Row(
+                        children: [
+                          Text(vokabel.correct.toString(),
+                              style: TextStyle(color: vokabel.correct == 0 ? Colors.black : Colors.green)),
+                          Text(" / "),
+                          Text(vokabel.wrong.toString(),
+                              style: TextStyle(color: vokabel.wrong == 0 ? Colors.black : Colors.red)),
+                        ],
+                      )
+                    : empty,
+              ]),
+            ),
             idx == this.state.selected
                 ? Container(
+                    width: 100,
                     alignment: Alignment.centerRight,
                     child: Column(
                       children: <Widget>[
                         RaisedButton(
                             onPressed: () {
+                              onChanged();
                               if (!state.selectedVokabel.showTarget)
                                 this.lesson.showTarget(true);
                               else {
