@@ -9,11 +9,16 @@ import 'package:vokie/json_object.dart';
 import 'package:vokie/lesson.dart';
 import 'package:vokie/storage.dart';
 
+const String basicFrench = "17dXxdYM10PzKbtGelsfNnyTb05UbK5-H";
+
 class LessonService {
   JsonApi api = DiContainer.resolve<JsonApi>();
 
   Future<Lesson> getCurrentLesson(Storage storage) async {
-    if (!storage.containsKey("current")) return getLesson(storage);
+    if (!storage.containsKey("current")) {
+      var idx = storage.get("current_idx", 0);
+      return getLesson(storage, idx: idx);
+    }
 
     var fileName = storage.getString("current");
     if (!await File(fileName).exists()) return getLesson(storage);
@@ -53,23 +58,37 @@ class LessonService {
       return await loadLesson(storage.getString("current"));
     }
     var data = await getData(format: "csv");
-    return getLessonFromData(data);
+    return getLessonFromData(data, idx);
   }
 
-  Future<Lesson> getLessonFromData(JsonObject data) async {
+  Future<Lesson> getLessonFromData(JsonObject data, int idx) async {
     var lessons = data.getList("lessons");
-    var lessonData = lessons[0];
+    var lessonData = lessons[idx];
+
+    var fileName = await toFileName(Lesson(JsonObject.fromDynamic(lessonData)));
+    if (await File(fileName).exists()) return await loadLesson(fileName);
 
     var lesson = lessonData["words"] != null ? JsonObject.fromDynamic(lessonData) : await api.get(lessonData["url"]);
 
     return Lesson(lesson);
   }
 
+  Future<String> get basicFrenchFileName async =>
+    (await getApplicationDocumentsDirectory()).path + "/" + basicFrench + ".csv;";
+  
+
   Future<JsonObject> getData({String format = "json"}) async {
     if (format == "json") {
       return api.getById("1lA-vhaxchV-4wi6quSQdOJAYbyZ3n_5g");
     } else {
-      var csvContent = await api.getContentById("17dXxdYM10PzKbtGelsfNnyTb05UbK5-H");
+      String csvContent;
+      var file = File(await basicFrenchFileName);
+      if (await file.exists()) {
+        csvContent = await file.readAsString();
+      } else {
+        csvContent = await api.getContentById(basicFrench);
+        file.writeAsString(csvContent);
+      }
       return Future.value(parseCsv(csvContent));
     }
   }

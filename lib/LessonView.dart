@@ -3,7 +3,7 @@ import 'package:vokie/LessonState.dart';
 import 'package:vokie/lesson.dart';
 
 @immutable
-class LessonView extends Widget {
+class LessonView extends StatelessWidget {
   final LessonState state;
   final Lesson lesson;
   final Function onChanged;
@@ -11,15 +11,6 @@ class LessonView extends Widget {
   LessonView(this.lesson, {@required this.onChanged}) : this.state = lesson.data;
 
   final Widget empty = Container(width: 0.0, height: 0.0);
-
-  @override
-  Element createElement() {
-    return StatelessElement(ListView.builder(
-      padding: EdgeInsets.all(10.0),
-      itemCount: state.lesson.length,
-      itemBuilder: createItem,
-    ));
-  }
 
   Widget createItem(context, idx) {
     var vokabel = state.lesson[idx];
@@ -69,7 +60,7 @@ class LessonView extends Widget {
                                 this.lesson.select(idx + 1);
                               }
                             },
-                            color: Colors.greenAccent,
+                            color: Color(0xee89fb98),
                             child: Text(vokabel.showTarget ? "Richtig" : "OK")),
                         vokabel.showTarget
                             ? RaisedButton(
@@ -86,6 +77,34 @@ class LessonView extends Widget {
           ],
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var body = Theme.of(context).textTheme.headline;
+    return Column(
+      children: <Widget>[
+        Container(
+          padding: EdgeInsets.all(10),
+          color: Color(0xffe0e0e0),
+                  child: Row(
+            children: <Widget>[
+              Text(state.name ?? "unknown", style: body),
+              Text("    ${state.currentDone}/${state.total - state.done} (${state.total})", style: body),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Container(
+            child: ListView.builder(
+              padding: EdgeInsets.all(10.0),
+              itemCount: state.lesson.length,
+              itemBuilder: createItem,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

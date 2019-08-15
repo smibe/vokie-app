@@ -22,6 +22,11 @@ class LessonState {
     return result;
   }
 
+  int get total => lesson.length;
+
+  int get done => lesson.where((x) => x.correct - x.wrong >= 4).length;
+  int get currentDone => lesson.where((x) => x.showTarget).length;
+
     toJson() {
       return {
         "name": name,

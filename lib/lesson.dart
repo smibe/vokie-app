@@ -14,6 +14,7 @@ class Lesson {
 
   Lesson(JsonObject values) {
     this.data.lesson = getWords(values);
+    this.data.name = values.data["name"] ??  "unknown";
   }
 
   dynamic toJson() {
@@ -52,7 +53,9 @@ class Lesson {
   }
 
   void wrong() {
-    selectedVokabel.wrong++;
+    if (selectedVokabel.correct - selectedVokabel.wrong > 0) {
+      selectedVokabel.wrong++;
+    }
     notifyChanged();
   }
 }

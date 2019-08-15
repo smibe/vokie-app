@@ -22,7 +22,7 @@ Abschnitt 2;;
     var lessonService = LessonService();
     var lessonsObject = lessonService.parseCsv(content);
     var lessons = lessonsObject.getList("lessons");
-    var lesson = await lessonService.getLessonFromData(lessonsObject);
+    var lesson = await lessonService.getLessonFromData(lessonsObject, 0);
 
     expect(lessons.length, 2);
     expect (lesson, isNotNull);

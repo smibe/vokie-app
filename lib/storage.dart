@@ -12,10 +12,13 @@ class Storage {
 
   bool containsKey(String key) => _preferences.containsKey(key);
   String getString(key) => _preferences.getString(key);
-  void setString(String key, String value) => _preferences.setString(key, value);
+  void setString(String key, String value) {
+    _preferences.setString(key, value);
+    if (_valueChanged.containsKey(key)) _valueChanged[key].invoke(value);
+  }
 
   Event<String> valueChanged(String key) {
-    if (_valueChanged.containsKey(key)) _valueChanged[key] = new Event<String>();
+    if (!_valueChanged.containsKey(key)) _valueChanged[key] = new Event<String>();
     return _valueChanged[key];
   }
 

@@ -12,6 +12,7 @@ import 'package:vokie/json_object.dart';
 import 'package:vokie/lesson.dart';
 import 'package:vokie/lesson_service.dart';
 import 'package:vokie/storage.dart';
+import 'package:vokie/unit_view.dart';
 import 'package:vokie/vokable.dart';
 
 void main() async {
@@ -64,6 +65,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Lesson lessonController;
+  String view = "lesson";
 
   Storage _storage;
   bool _hasChanged = false;
@@ -109,8 +111,18 @@ class _MyHomePageState extends State<MyHomePage> {
     _timer = Timer.periodic(Duration(seconds: 5), (t) {
       save();
     });
+    
+    getCurrentLesson();
+
+    _storage.valueChanged("current_idx").add((v){
+      getCurrentLesson();
+    });
+    
     super.initState();
 
+  }
+
+  void getCurrentLesson() {
     this.service = new LessonService();
     service.getCurrentLesson(_storage).then((l) {
       var firstLesson = l.data.lesson;
@@ -129,35 +141,50 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    TextTheme tStyle = Theme.of(context).textTheme;
     var scaffold = new Scaffold(
-        appBar: new AppBar(title: new Text(widget.title), actions: <Widget>[
+        appBar: new AppBar(title: Text(widget.title), actions: <Widget>[
           IconButton(
             icon: Icon(Icons.list),
             onPressed: () {
+              setState(() => view = "unit");
             },
           ),
           IconButton(
             icon: Icon(Icons.check_box_outline_blank),
             onPressed: () {
-              DiContainer.resolve<Storage>().remove("current");
+              setState(() => view = "lesson");
             },
           ),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () => setState(() => restart()),
-          ),
-          GestureDetector(
-            onTapDown: (d) => setState(() => allVisible()),
-            onTap: () => setState(() => resetVisible()),
-            child: IconButton(icon: Icon(Icons.visibility), onPressed: () => setState(() => resetVisible())),
-          ),
+          view == "lesson"
+              ? IconButton(
+                  icon: Icon(Icons.refresh),
+                  onPressed: () => setState(() => restart()),
+                )
+              : empty,
+          view == "lesson"
+              ? GestureDetector(
+                  onTapDown: (d) => setState(() => allVisible()),
+                  onTap: () => setState(() => resetVisible()),
+                  child: IconButton(icon: Icon(Icons.visibility), onPressed: () => setState(() => resetVisible())),
+                )
+              : empty,
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {},
           ),
         ]),
-        body: new LessonView(this.lessonController, onChanged: () => _hasChanged = true));
+        body: getView (view));
     return scaffold;
+  }
+
+  Widget getView(String view) {
+    switch (view) {
+      case "lesson":
+        return LessonView(this.lessonController, onChanged: () => _hasChanged = true);
+        case "unit":
+        return UnitView("Basiswortschatz Französisch");
+      default:
+        return empty;
+    }
   }
 }
