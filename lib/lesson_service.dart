@@ -10,6 +10,7 @@ import 'package:vokie/lesson.dart';
 import 'package:vokie/storage.dart';
 
 const String basicFrench = "17dXxdYM10PzKbtGelsfNnyTb05UbK5-H";
+const String frenchSentences = "1C8H2UAHj5wB_Gi8MZBlGF-n_k1rbJeKT";
 
 class LessonService {
   JsonApi api = DiContainer.resolve<JsonApi>();
@@ -26,27 +27,42 @@ class LessonService {
     return await loadLesson(storage.getString("current"));
   }
 
+  dynamic getUnits() {
+    return [
+      {
+        "name": "Basiswortschatz",
+        "id": basicFrench,
+      },
+      {
+        "name": "Französische Sätze",
+        "id": frenchSentences,
+      }
+    ];
+  }
+
   Future storeCurrentLesson(Storage storage, Lesson lesson) async {
     storage.set("current", await toFileName(lesson));
     return storeLesson(lesson);
   }
 
   Future<String> get _localPath async {
-  final directory = await getApplicationDocumentsDirectory();
+    final directory = await getApplicationDocumentsDirectory();
 
-  return directory.path + "/";
-}
+    return directory.path + "/";
+  }
 
   Future<Lesson> loadLesson(String fileName) async {
     var content = await File(fileName).readAsString();
     return Lesson.parse(content);
   }
 
-  Future<String> toFileName(Lesson lesson) async {
-   var name = lesson.data.name ?? "current_lesson";
-   name = name.replaceAll(" ", "_") + ".json";
-   return await _localPath + name;
-  } 
+  Future<String> toFileName(Lesson lesson, {String unit = basicFrench}) async {
+    var name = lesson.data.name ?? "current_lesson";
+    name = name.replaceAll(" ", "_") + ".json";
+    var dir = await _localPath + unit;
+    if (!await Directory(dir).exists()) Directory(dir).create();
+    return await _localPath + unit + "/" + name;
+  }
 
   Future storeLesson(Lesson lesson) async {
     var contents = json.encode(lesson);
@@ -57,7 +73,8 @@ class LessonService {
     if (storage.containsKey("current") && await File(storage.getString("current")).exists()) {
       return await loadLesson(storage.getString("current"));
     }
-    var data = await getData(format: "csv");
+    var unit = storage.get("current_unit_id", basicFrench);
+    var data = await getData(format: "csv", unit: unit);
     return getLessonFromData(data, idx);
   }
 
@@ -73,20 +90,20 @@ class LessonService {
     return Lesson(lesson);
   }
 
-  Future<String> get basicFrenchFileName async =>
-    (await getApplicationDocumentsDirectory()).path + "/" + basicFrench + ".csv;";
-  
+  Future<String> unitFileName(String unit) async {
+    return (await _localPath) + unit + ".csv;";
+  }
 
-  Future<JsonObject> getData({String format = "json"}) async {
+  Future<JsonObject> getData({String format = "json", String unit = basicFrench}) async {
     if (format == "json") {
       return api.getById("1lA-vhaxchV-4wi6quSQdOJAYbyZ3n_5g");
     } else {
       String csvContent;
-      var file = File(await basicFrenchFileName);
+      var file = File(await unitFileName(unit));
       if (await file.exists()) {
         csvContent = await file.readAsString();
       } else {
-        csvContent = await api.getContentById(basicFrench);
+        csvContent = await api.getContentById(unit);
         file.writeAsString(csvContent);
       }
       return Future.value(parseCsv(csvContent));

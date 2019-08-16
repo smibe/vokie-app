@@ -182,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
       case "lesson":
         return LessonView(this.lessonController, onChanged: () => _hasChanged = true);
         case "unit":
-        return UnitView("Basiswortschatz Französisch");
+        return UnitView();
       default:
         return empty;
     }

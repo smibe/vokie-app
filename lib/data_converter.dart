@@ -5,6 +5,7 @@ class DataConverter {
     num: (String s) => num.parse(s),
     double: (String s) => double.parse(s),
     bool: (String s) => s == "true",
+    String: (String s) => s,
   };
   
   static final toStringConverters = {
@@ -13,6 +14,7 @@ class DataConverter {
     num: (dynamic v) => (v as num).toString(),
     double: (dynamic v) => (v as double).toString(),
     bool: (dynamic v) => (v as bool).toString(),
+    String: (dynamic v) => v.toString(),
   };
   
   static T decode<T>(String value, T defaultValue) {
