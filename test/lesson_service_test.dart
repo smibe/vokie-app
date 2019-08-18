@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vokie/lesson_service.dart';
 
@@ -33,5 +35,11 @@ Abschnitt 2;;
     expect(words[1].source, "homme (m)");
     expect(words[1].target, "Mensch; Mann");
 
+  });
+
+  test('download mp3', () async {
+    await LessonService.downloadAndUnzip("1odtqPztmBW_Ada61BJrlb2WidqQrQmXq", "download");
+    var file = File("download/1odtqPztmBW_Ada61BJrlb2WidqQrQmXq.zip");
+    expect(file.existsSync(), isTrue); 
   });
 }

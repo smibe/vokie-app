@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart';
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vokie/DiContainer.dart';
 import 'package:vokie/jsonApi.dart';
@@ -11,6 +13,7 @@ import 'package:vokie/storage.dart';
 
 const String basicFrench = "17dXxdYM10PzKbtGelsfNnyTb05UbK5-H";
 const String frenchSentences = "1C8H2UAHj5wB_Gi8MZBlGF-n_k1rbJeKT";
+const String frenchSentencesMp3 = "1odtqPztmBW_Ada61BJrlb2WidqQrQmXq";
 
 class LessonService {
   JsonApi api = DiContainer.resolve<JsonApi>();
@@ -27,7 +30,7 @@ class LessonService {
     return await loadLesson(storage.getString("current"));
   }
 
-  dynamic getUnits() {
+  List<dynamic> getUnits() {
     return [
       {
         "name": "Basiswortschatz",
@@ -36,6 +39,7 @@ class LessonService {
       {
         "name": "Französische Sätze",
         "id": frenchSentences,
+        "mp3": frenchSentencesMp3,
       }
     ];
   }
@@ -90,23 +94,61 @@ class LessonService {
     return Lesson(lesson);
   }
 
-  Future<String> unitFileName(String unit) async {
+  Future<String> fileNameFromId(String unit) async {
     return (await _localPath) + unit + ".csv;";
   }
 
-  Future<JsonObject> getData({String format = "json", String unit = basicFrench}) async {
+  Future<JsonObject> getData({String format = "json", @required String unit}) async {
     if (format == "json") {
       return api.getById("1lA-vhaxchV-4wi6quSQdOJAYbyZ3n_5g");
     } else {
-      String csvContent;
-      var file = File(await unitFileName(unit));
-      if (await file.exists()) {
-        csvContent = await file.readAsString();
-      } else {
-        csvContent = await api.getContentById(unit);
-        file.writeAsString(csvContent);
-      }
+      String csvContent = await getUnitContent(unit);
       return Future.value(parseCsv(csvContent));
+    }
+  }
+
+  dynamic getUnit(String unitId) => getUnits().firstWhere((x) => x["id"] == unitId);
+
+  Future<String> getUnitContent(String unitId) async {
+    String csvContent;
+    var file = File(await fileNameFromId(unitId));
+    if (await file.exists()) {
+      csvContent = await file.readAsString();
+    } else {
+      csvContent = await api.getContentById(unitId);
+      file.writeAsString(csvContent);
+      var unit = getUnit(unitId);
+      if (unit["mp3"] != null) {
+        downloadAndUnzip(unit["mp3"], (await _localPath) + unitId);
+      }
+    }
+    return csvContent;
+  }
+
+  static Future downloadAndUnzip(String fileId, String path) async {
+    var url = "https://drive.google.com/uc?export=download&id=" + fileId;
+    var http = HttpClient();
+    var filePath = path + "/" + fileId + ".zip";
+    var dataFile = File(filePath);
+    if (!await Directory(path).exists()) await Directory(path).create();
+    var request = await http.getUrl(Uri.parse(url));
+    var response = await request.close();
+    await response.pipe(dataFile.openWrite());
+
+    // Read the Zip file from disk.
+    List<int> bytes = await File(filePath).readAsBytes();
+
+    // Decode the Zip file
+    Archive archive = new ZipDecoder().decodeBytes(bytes);
+
+    // Extract the contents of the Zip archive to disk.
+    for (ArchiveFile file in archive) {
+      if (!file.isFile) continue;
+      String filename = file.name;
+      List<int> data = file.content;
+      File(path + "/" + filename)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(data);
     }
   }
 

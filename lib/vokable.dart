@@ -1,6 +1,7 @@
 class Vokabel {
   String source;
   String target;
+  String mp3;
   int correct = 0;
   int wrong = 0;
   bool showTarget = false;
@@ -9,6 +10,7 @@ class Vokabel {
   Vokabel.fromDynamic(dynamic word) {
     source = word["src"];
     target = word["dest"];
+    mp3 = word["mp3"];
     correct = word["c"] ?? 0;
     wrong = word["w"] ?? 0;
     showTarget = word["st"] ?? false;
@@ -18,6 +20,7 @@ class Vokabel {
     return  {
       "src": source,
       "dest": target,
+      "mp3": mp3,
       "c": correct,
       "w": wrong,
       "st": showTarget,

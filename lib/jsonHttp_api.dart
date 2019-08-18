@@ -15,6 +15,7 @@ class JsonHttpApi extends JsonApi {
     return completer.future;
   }
 
+
   Future<JsonObject> get(String url) async {
     var jsonString = await getString(url);
     return JsonObject(jsonString);
