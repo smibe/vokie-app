@@ -58,6 +58,7 @@ class LessonService {
   Future<String> get unitLocalDirectory async {
     var storage = DiContainer.resolve<Storage>();
     var unit = storage.getString("current_unit_id");
+    if (unit == null) unit = "null";
     return await _localPath + unit + "/";
   }
 
@@ -164,7 +165,7 @@ class LessonService {
     }
   }
 
-  JsonObject parseCsv(String csvContent) {
+  JsonObject  parseCsv(String csvContent) {
     var lines = csvContent.split("\n");
     var data = Map<String, dynamic>();
     var lessons = List<dynamic>();

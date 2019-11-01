@@ -14,7 +14,8 @@ class LessonView extends StatelessWidget {
   final Lesson lesson;
   final Function onChanged;
 
-  LessonView(this.lesson, {@required this.onChanged}) : this.state = lesson.data;
+  LessonView(this.lesson, {@required this.onChanged}) 
+  : this.state = lesson.data;
 
   final Widget empty = Container(width: 0.0, height: 0.0);
 
@@ -33,9 +34,15 @@ class LessonView extends StatelessWidget {
     int result = await audioPlayer.play(path, isLocal: true);
   }
 
-  Widget createItem(context, idx) {
+  Widget createItem(context, i, List<int> filtered) {
+    var idx = filtered[i];
     var vokabel = state.lesson[idx];
     var showTarget = vokabel.showTarget;
+
+    if (idx == this.state.selected)
+    {
+      var s = vokabel.lastResponse;
+    }
 
     return GestureDetector(
       onTap: () {
@@ -73,7 +80,7 @@ class LessonView extends StatelessWidget {
                     future: _hasMp3(vokabel),),
               ]),
             ),
-            idx == this.state.selected
+            idx == this.state.selected && vokabel.lastResponse == LastResponse.unknown
                 ? Container(
                     width: 100,
                     alignment: Alignment.centerRight,
@@ -112,6 +119,15 @@ class LessonView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var body = Theme.of(context).textTheme.headline;
+    var filtered = List<int>();
+    for (var idx = 0; idx < state.lesson.length; idx++)
+    {
+      var v = state.lesson[idx];
+      if (v.correct - v.wrong < 4 || v.lastResponse != LastResponse.unknown)
+      {
+        filtered.add(idx);
+      }
+    }
     return Column(
       children: <Widget>[
         Container(
@@ -128,8 +144,8 @@ class LessonView extends StatelessWidget {
           child: Container(
             child: ListView.builder(
               padding: EdgeInsets.all(10.0),
-              itemCount: state.lesson.length,
-              itemBuilder: createItem,
+              itemCount: filtered.length,
+              itemBuilder: (c, i) => createItem(c, i, filtered),
             ),
           ),
         ),

@@ -93,7 +93,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void restart() {
-    for (var v in lesson) v.showTarget = false;
+    for (var v in lesson) 
+    {
+      v.showTarget = false;
+      v.lastResponse = LastResponse.unknown;
+    }
   }
 
   void resetVisible() {

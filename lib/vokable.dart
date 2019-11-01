@@ -1,3 +1,10 @@
+enum LastResponse
+{
+  unknown,
+  correct,
+  wrong
+}
+
 class Vokabel {
   String source;
   String target;
@@ -5,6 +12,8 @@ class Vokabel {
   int correct = 0;
   int wrong = 0;
   bool showTarget = false;
+  LastResponse lastResponse = LastResponse.unknown;
+  
 
   Vokabel(this.source, this.target);
   Vokabel.fromDynamic(dynamic word) {

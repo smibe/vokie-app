@@ -3,8 +3,11 @@
 
 .packages
 .pub/
+**/.idea
 
 build/
 
 .flutter-plugins
 download/
+ios/Flutter/flutter_export_environment.sh
+pubspec.lock

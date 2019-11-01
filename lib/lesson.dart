@@ -14,7 +14,7 @@ class Lesson {
 
   Lesson(JsonObject values) {
     this.data.lesson = getWords(values);
-    this.data.name = values.data["name"] ??  "unknown";
+    this.data.name = values.data["name"] ?? "unknown";
   }
 
   dynamic toJson() {
@@ -28,7 +28,9 @@ class Lesson {
   List<Vokabel> getWords(JsonObject values) {
     List<Vokabel> result = List<Vokabel>();
     for (var word in values.getList("words")) {
-      result.add(Vokabel.fromDynamic(word));
+      var vokabel = Vokabel.fromDynamic(word);
+
+      result.add(vokabel);
     }
     return result;
   }
@@ -44,6 +46,7 @@ class Lesson {
 
   void correct() {
     selectedVokabel.correct++;
+    selectedVokabel.lastResponse = LastResponse.correct;
     notifyChanged();
   }
 
@@ -56,6 +59,7 @@ class Lesson {
     if (selectedVokabel.correct - selectedVokabel.wrong > 0) {
       selectedVokabel.wrong++;
     }
+    selectedVokabel.lastResponse = LastResponse.wrong;
     notifyChanged();
   }
 }
