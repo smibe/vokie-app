@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vokie/DiContainer.dart';
@@ -25,6 +26,8 @@ Future initialize() async {
   var sharedPreferences = await SharedPreferences.getInstance();
   DiContainer.setInstance<SharedPreferences>(sharedPreferences);
   DiContainer.setInstance<Storage>(Storage());
+  DiContainer.setInstance<LessonService>(LessonService());
+  DiContainer.setInstance<AudioPlayer>(AudioPlayer());
 }
 
 class MyApp extends StatelessWidget {

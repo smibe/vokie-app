@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:vokie/DiContainer.dart';
 import 'package:vokie/LessonState.dart';
 import 'package:vokie/lesson.dart';
+import 'package:vokie/lesson_service.dart';
+import 'package:vokie/vokable.dart';
 
 @immutable
 class LessonView extends StatelessWidget {
@@ -11,6 +17,21 @@ class LessonView extends StatelessWidget {
   LessonView(this.lesson, {@required this.onChanged}) : this.state = lesson.data;
 
   final Widget empty = Container(width: 0.0, height: 0.0);
+
+  Future<bool> _hasMp3(Vokabel vokabel) async {
+    if (vokabel.mp3 == null) return Future.value(false);
+    var service = DiContainer.resolve<LessonService>();
+    var file  = File(await service.unitLocalDirectory + vokabel.mp3);
+
+    return vokabel.mp3 != null && vokabel.mp3 != "" && await file.exists();
+  }
+
+  playMp3(Vokabel vokabel) async {
+    var audioPlayer = DiContainer.resolve<AudioPlayer>();
+    var service = DiContainer.resolve<LessonService>();
+    var path = await service.unitLocalDirectory + vokabel.mp3; 
+    int result = await audioPlayer.play(path, isLocal: true);
+  }
 
   Widget createItem(context, idx) {
     var vokabel = state.lesson[idx];
@@ -42,6 +63,14 @@ class LessonView extends StatelessWidget {
                         ],
                       )
                     : empty,
+                    FutureBuilder(builder: (context, snapshot) {
+                      return lesson.data.selected == idx && snapshot.data
+                      ? IconButton(icon: Icon(Icons.play_arrow), onPressed: (){
+                        playMp3(vokabel);
+                      },)
+                      : empty;
+                    },
+                    future: _hasMp3(vokabel),),
               ]),
             ),
             idx == this.state.selected

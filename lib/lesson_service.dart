@@ -55,6 +55,12 @@ class LessonService {
     return directory.path + "/";
   }
 
+  Future<String> get unitLocalDirectory async {
+    var storage = DiContainer.resolve<Storage>();
+    var unit = storage.getString("current_unit_id");
+    return await _localPath + unit + "/";
+  }
+
   Future<Lesson> loadLesson(String fileName) async {
     var content = await File(fileName).readAsString();
     return Lesson.parse(content);
@@ -96,6 +102,12 @@ class LessonService {
 
   Future<String> fileNameFromId(String unit) async {
     return (await _localPath) + unit + ".csv;";
+  }
+
+  Future removeCached({@required String unit}) async{
+    var filename = await fileNameFromId(unit);
+    var file = File(filename);
+    if (await file.exists()) await file.delete();
   }
 
   Future<JsonObject> getData({String format = "json", @required String unit}) async {

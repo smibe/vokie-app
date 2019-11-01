@@ -25,7 +25,7 @@ class _UnitViewState extends State<UnitView> {
   @override
   void initState() {
     _currentUnitId = _storage.getString("current_unit_id");
-    _units = lessonService.getUnits() as List<dynamic>;
+    _units = lessonService.getUnits();
     _retrieveCurrentUnit();
     selection = _storage.get("current_idx", 0);
     super.initState();
@@ -38,6 +38,12 @@ class _UnitViewState extends State<UnitView> {
     lessonService.getData(format: "cvs", unit: _currentUnit["id"]).then((d) {
       setState(() => unit = d);
     });
+  }
+
+  void _refreshCurrentUnit() async {
+    await lessonService.removeCached(unit: _currentUnit["id"]);
+    var data = await lessonService.getData(format: "cvs", unit: _currentUnit["id"]);
+    setState(() => unit = data);
   }
 
   String get currentId => _currentUnit["id"];
@@ -54,17 +60,32 @@ class _UnitViewState extends State<UnitView> {
     var lessons = unit?.getList("lessons") ?? new List<dynamic>();
     return Column(
       children: <Widget>[
-        DropdownButton<String>(
-          value: currentId,
-          items: getItems(),
-          onChanged: (value) {
-            setState(() {
-              _currentUnitId = value;
-              _retrieveCurrentUnit();
-              _storage.setString("current_unit_id", value);
-              _storage.remove("current_idx");
-            });
-          },
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Row(
+            children: <Widget>[
+              DropdownButton<String>(
+                value: currentId,
+                items: getItems(),
+                onChanged: (value) {
+                  setState(() {
+                    _currentUnitId = value;
+                    _retrieveCurrentUnit();
+                    _storage.setString("current_unit_id", value);
+                    _storage.remove("current_idx");
+                  });
+                },
+              ),
+              Expanded(child: Padding(padding: EdgeInsets.all(0))),
+              IconButton(
+                  onPressed: () {
+                    _refreshCurrentUnit();
+                  },
+                  icon: Icon(
+                    Icons.refresh,
+                  ))
+            ],
+          ),
         ),
         Expanded(
           child: Container(
