@@ -13,8 +13,9 @@ class LessonView extends StatelessWidget {
   final LessonState state;
   final Lesson lesson;
   final Function onChanged;
+  final bool allTargetsVisible;
 
-  LessonView(this.lesson, {@required this.onChanged}) 
+  LessonView(this.lesson, {@required this.onChanged, @required this.allTargetsVisible}) 
   : this.state = lesson.data;
 
   final Widget empty = Container(width: 0.0, height: 0.0);
@@ -80,7 +81,7 @@ class LessonView extends StatelessWidget {
                     future: _hasMp3(vokabel),),
               ]),
             ),
-            idx == this.state.selected && vokabel.lastResponse == LastResponse.unknown
+            idx == this.state.selected && vokabel.lastResponse == LastResponse.unknown && !allTargetsVisible
                 ? Container(
                     width: 100,
                     alignment: Alignment.centerRight,

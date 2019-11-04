@@ -12,6 +12,7 @@ import 'package:vokie/jsonHttp_api.dart';
 import 'package:vokie/json_object.dart';
 import 'package:vokie/lesson.dart';
 import 'package:vokie/lesson_service.dart';
+import 'package:vokie/settingsView.dart';
 import 'package:vokie/storage.dart';
 import 'package:vokie/unit_view.dart';
 import 'package:vokie/vokable.dart';
@@ -77,6 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Vokabel> lesson;
 
   int selected = 0;
+  bool allTargetsVisible = false;
 
   Widget empty = Container(width: 0.0, height: 0.0);
   Timer _timer;
@@ -90,11 +92,11 @@ class _MyHomePageState extends State<MyHomePage> {
         setVisible.add(i);
       }
     }
+    allTargetsVisible = true;
   }
 
   void restart() {
-    for (var v in lesson) 
-    {
+    for (var v in lesson) {
       v.showTarget = false;
       v.lastResponse = LastResponse.unknown;
     }
@@ -102,6 +104,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void resetVisible() {
     for (var idx in setVisible) lesson[idx].showTarget = false;
+    allTargetsVisible = false;
+  }
+
+  void toggleVisible() {
+    if (allTargetsVisible)
+      resetVisible();
+    else
+      allVisible();
   }
 
   void save() {
@@ -118,15 +128,14 @@ class _MyHomePageState extends State<MyHomePage> {
     _timer = Timer.periodic(Duration(seconds: 5), (t) {
       save();
     });
-    
+
     getCurrentLesson();
 
-    _storage.valueChanged("current_idx").add((v){
+    _storage.valueChanged("current_idx").add((v) {
       getCurrentLesson();
     });
-    
-    super.initState();
 
+    super.initState();
   }
 
   void getCurrentLesson() {
@@ -148,20 +157,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var iconColor = Theme.of(context).appBarTheme.color;
+    var selectedIconColor = Theme.of(context).unselectedWidgetColor;
     var scaffold = new Scaffold(
         appBar: new AppBar(title: Text(widget.title), actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.list),
-            onPressed: () {
-              setState(() => view = "unit");
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.check_box_outline_blank),
-            onPressed: () {
-              setState(() => view = "lesson");
-            },
-          ),
           view == "lesson"
               ? IconButton(
                   icon: Icon(Icons.refresh),
@@ -170,26 +169,57 @@ class _MyHomePageState extends State<MyHomePage> {
               : empty,
           view == "lesson"
               ? GestureDetector(
-                  onTapDown: (d) => setState(() => allVisible()),
-                  onTap: () => setState(() => resetVisible()),
-                  child: IconButton(icon: Icon(Icons.visibility), onPressed: () => setState(() => resetVisible())),
+                  onTap: () => setState(() => toggleVisible()),
+                  child: IconButton(
+                      color: allTargetsVisible ? selectedIconColor : iconColor,
+                      icon: Icon(Icons.visibility),
+                      onPressed: () => setState(() => toggleVisible())),
                 )
               : empty,
           IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {},
+            icon: Icon(
+              Icons.check_box_outline_blank,
+              color: view == "lesson" ? selectedIconColor : iconColor,
+              size: view == "lesson" ? 34 : 24,
+            ),
+            onPressed: () {
+              setState(() => view = "lesson");
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.list,
+              color: view == "unit" ? selectedIconColor : iconColor,
+              size: view == "unit" ? 34 : 24,
+            ),
+            onPressed: () {
+              setState(() => view = "unit");
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.settings,
+              size: view == "settings" ? 34 : 24,
+              color: view == "settings" ? selectedIconColor : iconColor,
+            ),
+            onPressed: () {
+              setState(() => view = "settings");
+            },
           ),
         ]),
-        body: getView (view));
+        body: getView(view));
     return scaffold;
   }
 
   Widget getView(String view) {
     switch (view) {
       case "lesson":
-        return LessonView(this.lessonController, onChanged: () => _hasChanged = true);
-        case "unit":
+        return LessonView(this.lessonController,
+            onChanged: () => _hasChanged = true, allTargetsVisible: allTargetsVisible);
+      case "unit":
         return UnitView();
+      case "settings":
+        return SettingsView();
       default:
         return empty;
     }
