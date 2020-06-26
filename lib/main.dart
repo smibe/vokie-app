@@ -23,6 +23,7 @@ void main() async {
 }
 
 Future initialize() async {
+  WidgetsFlutterBinding.ensureInitialized();
   DiContainer.setInstance<JsonApi>(new JsonHttpApi());
   var sharedPreferences = await SharedPreferences.getInstance();
   DiContainer.setInstance<SharedPreferences>(sharedPreferences);
