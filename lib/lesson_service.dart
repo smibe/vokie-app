@@ -31,6 +31,28 @@ class LessonService {
     return await loadLesson(storage.getString("current"));
   }
 
+  Future updateCurrentLesson() async
+  {
+    var storage = DiContainer.resolve<Storage>();
+    var lesson = await getCurrentLesson(storage);
+    var updatedLesson = await loadUpdatedLesson();
+    if (lesson.data.lesson.length < updatedLesson.data.lesson.length)
+    {
+      lesson.data.lesson.addAll(updatedLesson.data.lesson.sublist(lesson.data.lesson.length));
+      await storeCurrentLesson(storage, lesson);
+    }
+  }
+
+  Future<Lesson> loadUpdatedLesson() async
+  {
+    var storage = DiContainer.resolve<Storage>();
+    var idx = storage.get("current_idx", 0);
+    var unit = storage.get("current_unit_id", _units == null || _units.length <= 0 ? "" : _units[0]["id"]);
+    var data = await getData(format: "csv", unit: unit);
+    if (data != null) return getPlainLessonFromData(data, idx);
+    return getCurrentLesson(storage);
+  }
+
   void resetUnits() => _units = null;
 
   Future<List<dynamic>> getUnits() async {
@@ -124,6 +146,14 @@ class LessonService {
 
     var lesson = lessonData["words"] != null ? JsonObject.fromDynamic(lessonData) : await api.get(lessonData["url"]);
 
+    return Lesson(lesson);
+  }
+
+  Lesson getPlainLessonFromData(JsonObject data, int idx)
+  {
+    var lessons = data.getList("lessons");
+    var lessonData = lessons[idx];
+    var lesson = JsonObject.fromDynamic(lessonData);
     return Lesson(lesson);
   }
 

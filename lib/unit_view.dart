@@ -48,6 +48,8 @@ class _UnitViewState extends State<UnitView> {
     await lessonService.removeCached(unit: _currentUnit["id"]);
     var data =
         await lessonService.getData(format: "cvs", unit: _currentUnit["id"]);
+
+    await lessonService.updateCurrentLesson();
     setState(() => unit = data);
   }
 
