@@ -17,40 +17,44 @@ class _UnitViewState extends State<UnitView> {
   int selection;
   var _storage = DiContainer.resolve<Storage>();
   String _currentUnitId;
-  List<dynamic> _units;
-  LessonService lessonService = LessonService();
+  List<dynamic> _units = List<dynamic>();
+  LessonService lessonService = DiContainer.resolve<LessonService>();
 
   dynamic _currentUnit;
 
   @override
   void initState() {
     _currentUnitId = _storage.getString("current_unit_id");
-    _units = lessonService.getUnits();
     _retrieveCurrentUnit();
     selection = _storage.get("current_idx", 0);
     super.initState();
   }
 
   void _retrieveCurrentUnit() {
-    _currentUnit =
-        _units.firstWhere((x) => x["id"] == _currentUnitId, orElse: (() => _units[0] as Map<String, String>));
+    lessonService.getUnits().then((u) {
+      _units = u;
+      _currentUnit = _units.firstWhere((x) => x["id"] == _currentUnitId,
+          orElse: (() => _units[0] as Map<String, String>));
 
-    lessonService.getData(format: "cvs", unit: _currentUnit["id"]).then((d) {
-      setState(() => unit = d);
+      if (_currentUnit == null) return;
+      lessonService.getData(format: "cvs", unit: _currentUnit["id"]).then((d) {
+        setState(() => unit = d);
+      });
     });
   }
 
   void _refreshCurrentUnit() async {
+    lessonService.resetUnits();
     await lessonService.removeCached(unit: _currentUnit["id"]);
-    var data = await lessonService.getData(format: "cvs", unit: _currentUnit["id"]);
+    var data =
+        await lessonService.getData(format: "cvs", unit: _currentUnit["id"]);
     setState(() => unit = data);
   }
 
-  String get currentId => _currentUnit["id"];
-
   getItems() {
     var list = _units.map((u) {
-      return DropdownMenuItem<String>(value: u["id"].toString(), child: Text(u["name"]));
+      return DropdownMenuItem<dynamic>(
+          value: u, child: Text(u["name"]));
     });
     return list.toList();
   }
@@ -64,15 +68,17 @@ class _UnitViewState extends State<UnitView> {
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Row(
             children: <Widget>[
-              DropdownButton<String>(
-                value: currentId,
+              DropdownButton<dynamic>(
+                value: _currentUnit,
                 items: getItems(),
                 onChanged: (value) {
                   setState(() {
-                    _currentUnitId = value;
+                    _currentUnitId = value["id"];
                     _retrieveCurrentUnit();
-                    _storage.setString("current_unit_id", value);
+                    _storage.setString("current_unit_id", value["id"]);
+                    _storage.setString("current_unit_name", value["name"]);
                     _storage.remove("current_idx");
+                    _storage.remove("current");
                   });
                 },
               ),
@@ -99,7 +105,8 @@ class _UnitViewState extends State<UnitView> {
                       groupValue: selection,
                       onChanged: (int value) {
                         DiContainer.resolve<Storage>().remove("current");
-                        DiContainer.resolve<Storage>().setString("current_idx", value.toString());
+                        DiContainer.resolve<Storage>()
+                            .setString("current_idx", value.toString());
                         setState(() {
                           selection = value;
                         });

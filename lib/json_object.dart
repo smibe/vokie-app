@@ -4,18 +4,17 @@
  * http://github.com/chrisbu/dartwatch-JsonObject
  */
 
-
 library json_object;
 
 import 'dart:convert';
-
 
 class JsonObject {
   Map<String, dynamic> data;
 
   JsonObject(String jsonData) {
-    this.data = json.decode(jsonData);
+    this.data = jsonData == "" ? Map<String, dynamic>() : json.decode(jsonData);
   }
+
   JsonObject.fromDynamic(this.data);
   String getString(String key) => data[key];
   void setString(String key, String value) => data[key] = value;

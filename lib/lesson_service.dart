@@ -17,6 +17,7 @@ const String frenchSentencesMp3 = "1odtqPztmBW_Ada61BJrlb2WidqQrQmXq";
 
 class LessonService {
   JsonApi api = DiContainer.resolve<JsonApi>();
+  List<dynamic> _units;
 
   Future<Lesson> getCurrentLesson(Storage storage) async {
     if (!storage.containsKey("current")) {
@@ -30,7 +31,22 @@ class LessonService {
     return await loadLesson(storage.getString("current"));
   }
 
-  List<dynamic> getUnits() {
+  void resetUnits() => _units = null;
+
+  Future<List<dynamic>> getUnits() async {
+    if (_units != null) return _units;
+
+    var storage = DiContainer.resolve<Storage>();
+    var learnContentId = storage.get("learnContentId", "");
+    if (learnContentId != "")
+    {
+      var content = await api.getJsonById(learnContentId, source: "gdoc"); 
+      if (content != null && content.data != null && content.data.containsKey("learnContent"))
+      {
+        _units = content.getList("learnContent");
+      }
+        return _units;
+    }
     return [
       {
         "name": "Basiswortschatz",
@@ -67,6 +83,16 @@ class LessonService {
     return Lesson.parse(content);
   }
 
+  Future<Map<String, String>> getCurrentUnit() async
+  {
+    var storage = DiContainer.resolve<Storage>();
+    var currentUnitId = storage.getString("current_unit_id");
+    var currentUnit = (await getUnits()).firstWhere((x) => x["id"] == currentUnitId,
+          orElse: (() => _units[0] as Map<String, String>));
+    return currentUnit;
+
+  }
+
   Future<String> toFileName(Lesson lesson, {String unit = basicFrench}) async {
     var name = lesson.data.name ?? "current_lesson";
     name = name.replaceAll(" ", "_") + ".json";
@@ -84,7 +110,7 @@ class LessonService {
     if (storage.containsKey("current") && await File(storage.getString("current")).exists()) {
       return await loadLesson(storage.getString("current"));
     }
-    var unit = storage.get("current_unit_id", basicFrench);
+    var unit = storage.get("current_unit_id", _units == null || _units.length <= 0 ? "" : _units[0]["id"]);
     var data = await getData(format: "csv", unit: unit);
     return getLessonFromData(data, idx);
   }
@@ -120,7 +146,7 @@ class LessonService {
     }
   }
 
-  dynamic getUnit(String unitId) => getUnits().firstWhere((x) => x["id"] == unitId);
+  dynamic getUnit(String unitId) async => (await getUnits()).firstWhere((x) => x["id"] == unitId);
 
   Future<String> getUnitContent(String unitId) async {
     String csvContent;
@@ -130,7 +156,7 @@ class LessonService {
     } else {
       csvContent = await api.getTsvContentById(unitId);
       file.writeAsString(csvContent);
-      var unit = getUnit(unitId);
+      var unit = await getUnit(unitId);
       if (unit["mp3"] != null) {
         downloadAndUnzip(unit["mp3"], (await _localPath) + unitId);
       }

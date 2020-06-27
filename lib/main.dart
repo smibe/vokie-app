@@ -140,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void getCurrentLesson() {
-    this.service = new LessonService();
+    this.service = DiContainer.resolve<LessonService>();
     service.getCurrentLesson(_storage).then((l) {
       var firstLesson = l.data.lesson;
       this.lessonController = l;
