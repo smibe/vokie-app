@@ -11,8 +11,8 @@ import 'package:vokie/json_object.dart';
 import 'package:vokie/lesson.dart';
 import 'package:vokie/storage.dart';
 
-const String basicFrench = "17dXxdYM10PzKbtGelsfNnyTb05UbK5-H";
-const String frenchSentences = "1C8H2UAHj5wB_Gi8MZBlGF-n_k1rbJeKT";
+const String basicFrench = "1NRV9j0bzBAd-_0P_gdioNy24E6oE7dHL_dNSGY12nd4";
+const String frenchSentences = "1XZBTlZf_Mc-Nqb6ONGhKFf0VGNZ-RoJA0YzcohMP3-M";
 const String frenchSentencesMp3 = "1odtqPztmBW_Ada61BJrlb2WidqQrQmXq";
 
 class LessonService {
@@ -113,10 +113,10 @@ class LessonService {
 
   Future<JsonObject> getData({String format = "json", @required String unit}) async {
     if (format == "json") {
-      return api.getById("1lA-vhaxchV-4wi6quSQdOJAYbyZ3n_5g");
+      return api.getJsonById("1lA-vhaxchV-4wi6quSQdOJAYbyZ3n_5g");
     } else {
-      String csvContent = await getUnitContent(unit);
-      return Future.value(parseCsv(csvContent));
+      String tsvContent = await getUnitContent(unit);
+      return Future.value(parseTsv(tsvContent));
     }
   }
 
@@ -128,7 +128,7 @@ class LessonService {
     if (await file.exists()) {
       csvContent = await file.readAsString();
     } else {
-      csvContent = await api.getContentById(unitId);
+      csvContent = await api.getTsvContentById(unitId);
       file.writeAsString(csvContent);
       var unit = getUnit(unitId);
       if (unit["mp3"] != null) {
@@ -165,15 +165,15 @@ class LessonService {
     }
   }
 
-  JsonObject  parseCsv(String csvContent) {
-    var lines = csvContent.split("\n");
+  JsonObject  parseTsv(String tsvContent) {
+    var lines = tsvContent.split("\n");
     var data = Map<String, dynamic>();
     var lessons = List<dynamic>();
     data["lessons"] = lessons;
     var lesson;
     var words;
     for (var line in lines.skip(1)) {
-      var fields = line.split(';');
+      var fields = line.split('\t');
       var name = fields[0].trim();
       if (name != "") {
         lesson = Map<String, dynamic>();

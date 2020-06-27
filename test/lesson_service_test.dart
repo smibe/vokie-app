@@ -6,23 +6,25 @@ import 'package:vokie/lesson_service.dart';
 main() {
   test('parce csv test', () async {
     var content = """
-Lektion;Französisch;Deutsch
-Abschnitt 1;;
-;on;man
-;homme (m);"Mensch; Mann"
-;à raison de;à, je, zu
-;grand;groß
-;connaître;kennen
-;
-Abschnitt 2;;
-;être;sein
-;personne;"keiner, keine, keines; niemand"
-;où;"wo; wohin"
-;deux;zwei
-;six;sechs
+Lektion\tFranzösisch\tDeutsch
+Abschnitt 1\t\t
+\ton\tman
+\thomme (m)\t"Mensch\t Mann"
+\tà raison de\tà, je, zu
+\tgrand\tgroß
+\tconnaître\tkennen
+\t
+Abschnitt 2\t\t
+\têtre\tsein
+\tpersonne\t"keiner, keine, keines\t niemand"
+\toù\t"wo\t wohin"
+\tdeux\tzwei
+\tsix\tsechs
     """;
+
+    TestWidgetsFlutterBinding.ensureInitialized();
     var lessonService = LessonService();
-    var lessonsObject = lessonService.parseCsv(content);
+    var lessonsObject = lessonService.parseTsv(content);
     var lessons = lessonsObject.getList("lessons");
     var lesson = await lessonService.getLessonFromData(lessonsObject, 0);
 

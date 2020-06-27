@@ -29,21 +29,21 @@ class JsonHttpApi extends JsonApi {
     return result;
   }
 
-  Future<JsonObject> getById(String id) async {
-    return getFromDrive(id);
+  Future<JsonObject> getJsonById(String id) async {
+    return getJsonFromDrive(id);
   }
 
-  Future<String> getContentById(String id) async {
-    return await getStringFromDrive(id);
+  Future<String> getTsvContentById(String id) async {
+    return await getTsvFromDrive(id);
   }
 
-  Future<JsonObject> getFromDrive(String id) async {
+  Future<JsonObject> getJsonFromDrive(String id) async {
     var url = "https://drive.google.com/uc?export=download&id=" + id;
     return await get(url);
   }
 
-  Future<String> getStringFromDrive(String id) async {
-    var url = "https://drive.google.com/uc?export=download&id=" + id;
+  Future<String> getTsvFromDrive(String id) async {
+    var url = "https://docs.google.com/spreadsheets/d/" + id + "/export?format=tsv";
     return await getString(url);
   }
 }

@@ -16,7 +16,7 @@ class JsonObject {
   JsonObject(String jsonData) {
     this.data = json.decode(jsonData);
   }
-  JsonObject.fromDynamic(Map<String, dynamic> this.data);
+  JsonObject.fromDynamic(this.data);
   String getString(String key) => data[key];
   void setString(String key, String value) => data[key] = value;
 

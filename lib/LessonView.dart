@@ -119,7 +119,7 @@ class LessonView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var body = Theme.of(context).textTheme.headline;
+    var body = Theme.of(context).textTheme.headline5;
     var filtered = List<int>();
     for (var idx = 0; idx < state.lesson.length; idx++)
     {
