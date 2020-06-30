@@ -25,29 +25,42 @@ class _UnitViewState extends State<UnitView> {
   @override
   void initState() {
     _currentUnitId = _storage.getString("current_unit_id");
-    _retrieveCurrentUnit();
+    _retrieveCurrentUnit().then((d) {
+        setState(() => unit = d);
+    });
     selection = _storage.get("current_idx", 0);
+    _storage.valueChanged("current_unit_id").add(onUnitChanged);
     super.initState();
   }
 
-  void _retrieveCurrentUnit() {
-    lessonService.getUnits().then((u) {
-      _units = u;
-      _currentUnit = _units.firstWhere((x) => x["id"] == _currentUnitId,
-          orElse: (() => _units[0] as Map<String, String>));
+  @override
+  void dispose()
+  {
+    _storage.valueChanged("current_unit_id").handlers.remove(onUnitChanged); 
+    super.dispose();
+  }
 
-      if (_currentUnit == null) return;
-      lessonService.getData(format: "cvs", unit: _currentUnit["id"]).then((d) {
-        setState(() => unit = d);
+  void onUnitChanged(String unitId) async
+  {
+      var u = await _retrieveCurrentUnit();
+      setState(() {
+        unit = u;
       });
-    });
+ }
+
+  Future<JsonObject> _retrieveCurrentUnit() async {
+    _units = await lessonService.getUnits();
+    _currentUnit = _units.firstWhere((x) => x["id"] == _currentUnitId,
+          orElse: (() => _units[0] as Map<String, dynamic>));
+
+    if (_currentUnit == null) return null;
+    return await lessonService.getData(format: "cvs", unit: _currentUnit["id"]);
   }
 
   void _refreshCurrentUnit() async {
     lessonService.resetUnits();
     await lessonService.removeCached(unit: _currentUnit["id"]);
-    var data =
-        await lessonService.getData(format: "cvs", unit: _currentUnit["id"]);
+    var data = await _retrieveCurrentUnit();
 
     await lessonService.updateCurrentLesson();
     setState(() => unit = data);
@@ -55,8 +68,7 @@ class _UnitViewState extends State<UnitView> {
 
   getItems() {
     var list = _units.map((u) {
-      return DropdownMenuItem<dynamic>(
-          value: u, child: Text(u["name"]));
+      return DropdownMenuItem<dynamic>(value: u, child: Text(u["name"]));
     });
     return list.toList();
   }

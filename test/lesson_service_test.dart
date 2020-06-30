@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vokie/lesson_service.dart';
 
 main() {
-  test('parce csv test', () async {
+  test('parce tsv test', () async {
     var content = """
 Lektion\tFranzösisch\tDeutsch
 Abschnitt 1\t\t
@@ -45,5 +45,5 @@ Abschnitt 2\t\t
     expect(file.existsSync(), isTrue); 
   });
 
-  
+
 }
